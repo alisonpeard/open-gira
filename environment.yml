@@ -9,7 +9,7 @@ dependencies:
   - pip
   - pip:  # delegate to pip for non-conda packages
     - nismod-snail==0.5.2 # vector-raster intersections
-    # - osmium==3.2.0       # OpenStreetMap protobuf handling
+    - osmium==3.2.0       # OpenStreetMap protobuf handling
     - snkit==1.8.1        # spatial network cleaning
     # required zenodo_get version not available via conda-forge
     - zenodo_get>=1.5.1   # data download client, zenodo API broken w/ <1.5.1
@@ -36,7 +36,7 @@ dependencies:
   - networkx            # networks
   - numpy               # data arrays
   - openpyxl            # Excel file format
-  # - osmium-tool==1.14.0 # openstreetmap extracts
+  - osmium-tool==1.14.0 # openstreetmap extracts
   - pathos              # multiprocessing
   # test_network_components.py fails with pandas 2.1.0, see commit msg
   - pandas==2.0.3       # tabular data

@@ -44,3 +44,6 @@ docs/book/
 
 # Cluster
 slurm
+
+# MacOS
+.DS_Store

@@ -89,7 +89,7 @@ Workflow steps are tested using small sample datasets.
 To run the tests:
 
 ```bash
-python -m pytest tests
+python -m pytest tests -x
 ```
 
 ## Usage

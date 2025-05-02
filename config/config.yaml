@@ -28,6 +28,7 @@ infrastructure_datasets:
   india-latest: "https://download.geofabrik.de/asia/india-latest.osm.pbf"
   jamaica-latest: "http://download.geofabrik.de/central-america/jamaica-latest.osm.pbf"
   kenya-latest: "http://download.geofabrik.de/africa/kenya-latest.osm.pbf"
+  somalia-latest: "https://download.geofabrik.de/africa/somalia-latest.osm.pbf"
   laos-latest: "https://download.geofabrik.de/asia/laos-latest.osm.pbf"
   myanmar-latest: "https://download.geofabrik.de/asia/myanmar-latest.osm.pbf"
   tanzania-latest: "https://download.geofabrik.de/africa/tanzania-latest.osm.pbf"
@@ -116,6 +117,7 @@ hazard_datasets:
   jba-event: "config/hazard_resource_locations/jba-events.txt"
   landslide-arup: "config/hazard_resource_locations/landslide-arup.txt"
   coastal-deltares: "config/hazard_resource_locations/coastal-deltares.txt"
+  fathom-pluvial: "config/hazard_resource_locations/fathom-pluvial.txt"
 
 hazard_types:
   aqueduct-coast: "flood"
@@ -124,6 +126,7 @@ hazard_types:
   jba-event: "flood"
   landslide-arup: "landslide"
   coastal-deltares: "flood"
+  fathom-pluvial: "flood"
 
 direct_damages:
   # assets to calculate direct damages for

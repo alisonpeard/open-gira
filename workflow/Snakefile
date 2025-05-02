@@ -147,6 +147,7 @@ include: "transport/maritime/maritime.smk"
 include: "transport/multi-modal/multi_modal.smk"
 include: "transport/flow_allocation/allocate.smk"
 
+include: "flood/fathom.smk"
 include: "flood/aqueduct.smk"
 include: "flood/coastal_deltares.smk"
 include: "flood/river_jrc.smk"

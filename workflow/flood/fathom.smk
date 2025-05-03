@@ -1,11 +1,7 @@
-""" Code to incorporate Fathom flood hazard data into the Open-GIRA pipeline (May 2025)
+"""Rules to incorporate get Fathom data into OpenGIRA raw/ folder and add to pipeline.
 
-Note the tiny grid (1 arcsec) size of the Fathom data makes this very slow.
-with 64 slices:
-    "Split 8 edges into 9126 pieces"
-with 256 slices (made a big difference for single slice):
-    "Split 13 edges into 3281 pieces"
-    "Split 539 edges into 15571 pieces"
+Note the tiny grid (1 arcsec) size of the Fathom data makes this very slow with 64 slices
+(e.g., 8 edges --> 9126 slices). Better to use 128, 256 or more slices.
 
 Made the following changes to the rest of the repo:
     1. `touch "config/hazard_resource_locations/fathom-pluvial.txt"`
@@ -34,12 +30,18 @@ To test run with one slice for fluvial:
 >>> snakemake --cores 4 -- results/direct_damages/somalia-latest_filter-{road-primary,road-secondary,road-tertiary,road-residential}/hazard-fathom-fluvial/EAD_and_cost_per_RP/slice-0.geoparquet
 """
 
+def format_scenario(scenario):
+    if scenario.startswith("SSP"):
+        return scenario.replace("p", ".").replace("-", "_")
+    elif scenario == "hist":
+        return "historical"
+
 rule mosaic_fathom:
     input:
         indir=lambda wildcards: "/Users/alison/Downloads/fathom/{floodtype}/{epoch}/{scenario}/1in{rp}/".format(
             floodtype=wildcards.FLOODTYPE,
             epoch=wildcards.EPOCH,
-            scenario=wildcards.SCENARIO.replace("p", ".").replace("-", "_"),
+            scenario=format_scenario(wildcards.SCENARIO),
             rp=int(wildcards.RP)
         )
     output:
@@ -70,12 +72,22 @@ rule mosaic_fathom:
         """
 
 
-rule fathom_all:
+rule fathom_all_scenario:
     input:
         tiffs = expand(
             "results/input/hazard-fathom-{FLOODTYPE}/raw/{FLOODTYPE}_{SCENARIO}_{EPOCH}_rp{RP}.tif",
-            FLOODTYPE=["fluvial"],   # ["pluvial", "fluvial", "coastal"]
+            FLOODTYPE=["fluvial", "coastal"],   # ["pluvial", "fluvial", "coastal"]
             SCENARIO=["SSP2-4p5", "SSP5-8p5"],   # ["historical", "SSP2_4p5", "SSP5_8p5"]
-            EPOCH=["2050"],          # ["2020", "2050", "2080"]
+            EPOCH=["2050", "2080"],          # ["2020", "2050", "2080"]
+            RP=["00005", "00010", "00100", "00200", "00500", "01000"],
+        )
+
+rule fathom_all_historical:
+    input:
+        tiffs = expand(
+            "results/input/hazard-fathom-{FLOODTYPE}/raw/{FLOODTYPE}_{SCENARIO}_{EPOCH}_rp{RP}.tif",
+            FLOODTYPE=["fluvial", "coastal"],   # ["pluvial", "fluvial", "coastal"]
+            SCENARIO=["hist"],   # ["historical", "SSP2_4p5", "SSP5_8p5"]
+            EPOCH=["2020"],          # ["2020", "2050", "2080"]
             RP=["00005", "00010", "00100", "00200", "00500", "01000"],
         )

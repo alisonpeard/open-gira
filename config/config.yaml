@@ -117,7 +117,8 @@ hazard_datasets:
   jba-event: "config/hazard_resource_locations/jba-events.txt"
   landslide-arup: "config/hazard_resource_locations/landslide-arup.txt"
   coastal-deltares: "config/hazard_resource_locations/coastal-deltares.txt"
-  fathom-pluvial: "config/hazard_resource_locations/fathom-pluvial.txt"
+  fathom-pluvial: "config/hazard_resource_locations/fathom.txt"
+  fathom-fluvial: "config/hazard_resource_locations/fathom.txt"
 
 hazard_types:
   aqueduct-coast: "flood"
@@ -127,6 +128,7 @@ hazard_types:
   landslide-arup: "landslide"
   coastal-deltares: "flood"
   fathom-pluvial: "flood"
+  fathom-fluvial: "flood"
 
 direct_damages:
   # assets to calculate direct damages for

@@ -79,6 +79,27 @@ class ReturnPeriodMap(ABC):
     def __hash__(self):
         """Map name string should capture all that is unique about object."""
         return hash(self.name)
+    
+
+class TemplateFlood(ReturnPeriodMap):
+    """The bare minimum for a flood map class."""
+
+    PREFIX = "template"
+
+    def __init__(self, name: str):
+        self.name = name
+        self.scenario = "historical"
+        self.year = 2020
+        self.model = "template"
+        self.return_period_years = 100
+
+    @property
+    def without_model(self) -> str:
+        return self.name
+
+    @property
+    def without_RP(self) -> str:
+        return self.name 
 
 
 class FathomFlood(ReturnPeriodMap):
@@ -95,32 +116,34 @@ class FathomFlood(ReturnPeriodMap):
     """
 
     PLUVIAL  = "pluvial"
+    FLUVIAL  = "fluvial"
+    COASTAL  = "coastal"
 
     def __init__(self, name:str):
         self.name = name
         attributes = name.split("_")
 
         try:
-            floodtype, ssp, rcp, epoch, rp = attributes
+            floodtype, scenario, epoch, rp = attributes
         except ValueError:
             raise ValueError(
-                f"Fathom flood map name {name} does not match expected pattern"
+                f"Fathom {name=} does not match expected pattern"
             )
 
-        if floodtype == self.PLUVIAL:
+        if floodtype in (self.PLUVIAL, self.FLUVIAL, self.COASTAL):
             self.floodtype = floodtype
-            self.scenario = '_'.join([ssp, rcp])
+            self.scenario = scenario
             self.epoch = int(epoch)
             self.model = "fathom"
-            self.return_period_years = int(rp)
+            self.return_period_years = int(rp.replace("rp", ""))
         else:
             raise ValueError(
-                f"Fathom flood map name {name} does not match expected pattern"
+                f"Fathom {floodtype=} does not match expected pattern"
             )
 
     @property
     def without_model(self) -> str:
-        return f"{self.floodtype}_{self.scenario}_{self.epoch}_rp{self.return_period_years}"
+        return f"{self.floodtype}_{self.scenario}_{self.epoch}_rp{self.return_period_years:05d}"
 
     @property
     def without_RP(self) -> str:
@@ -350,7 +373,9 @@ def get_rp_map(name: str) -> ReturnPeriodMap:
         AqueductFlood.COASTAL: AqueductFlood,
         JRCFlood.PREFIX: JRCFlood,
         DeltaresFlood.PREFIX: DeltaresFlood,
-        FathomFlood.PLUVIAL: FathomFlood
+        FathomFlood.PLUVIAL: FathomFlood,
+        FathomFlood.FLUVIAL: FathomFlood,
+        FathomFlood.COASTAL: FathomFlood,
     }
 
     # choose constructor on name prefix

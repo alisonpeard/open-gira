@@ -81,6 +81,52 @@ class ReturnPeriodMap(ABC):
         return hash(self.name)
 
 
+class FathomFlood(ReturnPeriodMap):
+    """Single set of return period flood maps
+
+    Named on this pattern:
+        expand(
+            "results/input/hazard-fathom-{FLOODTYPE}/raw/{FLOODTYPE}_{SCENARIO}_{EPOCH}_{RP}.tif",
+            FLOODTYPE=["pluvial"],
+            SCENARIO=["SSP2_4p5"],
+            EPOCH=["2050", "2080"],
+            RP=["10", "50", "100", "500"],
+        )
+    """
+
+    PLUVIAL  = "pluvial"
+
+    def __init__(self, name:str):
+        self.name = name
+        attributes = name.split("_")
+
+        try:
+            floodtype, ssp, rcp, epoch, rp = attributes
+        except ValueError:
+            raise ValueError(
+                f"Fathom flood map name {name} does not match expected pattern"
+            )
+
+        if floodtype == self.PLUVIAL:
+            self.floodtype = floodtype
+            self.scenario = '_'.join([ssp, rcp])
+            self.epoch = int(epoch)
+            self.model = "fathom"
+            self.return_period_years = int(rp)
+        else:
+            raise ValueError(
+                f"Fathom flood map name {name} does not match expected pattern"
+            )
+
+    @property
+    def without_model(self) -> str:
+        return f"{self.floodtype}_{self.scenario}_{self.epoch}_rp{self.return_period_years}"
+
+    @property
+    def without_RP(self) -> str:
+        return f"{self.floodtype}_{self.scenario}_{self.epoch}"
+
+
 class JRCFlood(ReturnPeriodMap):
     """Single set of return period flood maps
     Named on this pattern:
@@ -304,6 +350,7 @@ def get_rp_map(name: str) -> ReturnPeriodMap:
         AqueductFlood.COASTAL: AqueductFlood,
         JRCFlood.PREFIX: JRCFlood,
         DeltaresFlood.PREFIX: DeltaresFlood,
+        FathomFlood.PLUVIAL: FathomFlood
     }
 
     # choose constructor on name prefix

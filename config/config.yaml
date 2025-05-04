@@ -67,7 +67,7 @@ keep_tags:
   rail: ["railway", "bridge", "name", "gauge", "usage", "electrified", "passenger_lines", "voltage", "maxspeed"]
 
 # Number of slices to cut dataset into -- must be a square number
-slice_count: 256 # 64 is default, 128, 256, 512, 1024 are all possible
+slice_count: 64 # 64 is default, 128, 256, 512, 1024 are all possible
 
 ####################################
 ### MULTI-MODAL NETWORK CREATION ###
@@ -119,6 +119,7 @@ hazard_datasets:
   coastal-deltares: "config/hazard_resource_locations/coastal-deltares.txt"
   fathom-pluvial: "config/hazard_resource_locations/fathom.txt"
   fathom-fluvial: "config/hazard_resource_locations/fathom.txt"
+  fathom-coastal: "config/hazard_resource_locations/fathom.txt"
 
 hazard_types:
   aqueduct-coast: "flood"
@@ -129,6 +130,7 @@ hazard_types:
   coastal-deltares: "flood"
   fathom-pluvial: "flood"
   fathom-fluvial: "flood"
+  fathom-coastal: "flood"
 
 direct_damages:
   # assets to calculate direct damages for

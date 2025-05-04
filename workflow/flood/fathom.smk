@@ -4,7 +4,7 @@ Note the tiny grid (1 arcsec) size of the Fathom data makes this very slow with 
 (e.g., 8 edges --> 9126 slices). Better to use 128, 256 or more slices.
 
 Made the following changes to the rest of the repo:
-    1. `touch "config/hazard_resource_locations/fathom-pluvial.txt"`
+    1. `touch "config/hazard_resource_locations/fathom.txt"`
     2. config/config.yaml
         a. hazard_datasets: fathom-pluvial: "config/hazard_resource_locations/fathom-pluvial.txt"
         b. hazard_types: fathom-pluvial: "flood"
@@ -19,10 +19,10 @@ Made the following changes to the rest of the repo:
 To create raw input files:
 >>> cd ~/Local/github/open-gira
 >>> conda activate open-gira
->>> snakemake --cores 4 -- fathom_all
+>>> snakemake--rerun-incomplete --cores 8 -- fathom_all
 
 To do flood damage calculations:
->>> snakemake --cores 4 -- results/direct_damages/somalia-latest_filter-{road-primary,road-secondary,road-tertiary,road-residential}/hazard-fathom-fluvial/EAD_and_cost_per_RP/slice-{0..127}.geoparquet
+>>> snakemake --rerun-incomplete --cores 4 -- results/direct_damages/somalia-latest_filter-{road-primary,road-secondary,road-tertiary,road-residential}/hazard-fathom-fluvial/EAD_and_cost_per_RP/slice-{0..127}.geoparquet
 >>> snakemake --cores 4 -- results/direct_damages/somalia-latest_filter-{road-primary,road-secondary,road-tertiary,road-residential}/hazard-fathom-pluvial/EAD_and_cost_per_RP/slice-{0..127}.geoparquet
 >>> snakemake --cores 4 -- results/direct_damages/somalia-latest_filter-{road-primary,road-secondary,road-tertiary,road-residential}/hazard-fathom-coastal/EAD_and_cost_per_RP/slice-{0..127}.geoparquet
 
@@ -56,15 +56,29 @@ rule mosaic_fathom:
         gdalbuildvrt $TEMP_DIR/temp_mosaic.vrt -input_file_list $TEMP_DIR/tiles.txt
         
         # files are big, add compression methods
-        gdal_calc.py --calc="(A==-32767)*0 + (A>-32767)*(A<9999)*(A/100)" \
+        # gdal_calc.py --calc="(A==-32767)*(-999) + (A>-32767)*(A<9999)*(A/100)" \
+        #     --format=GTiff \
+        #     --type=Float32 \
+        #     -A $TEMP_DIR/temp_mosaic.vrt \
+        #     --outfile={output.tiff} \
+        #     --NoDataValue=-32768 \
+        #     --co COMPRESS=LZW \
+        #     --co PREDICTOR=3 \
+        #     --co TILED=YES \
+        #     --co BIGTIFF=IF_SAFER \
+        #     --config GDAL_CACHEMAX 50%
+
+        # Resample to approximately 90m resolution (0.000833 degrees ≈ 3 arc-seconds)
+        gdalwarp -tr 0.000833 0.000833 -r bilinear $TEMP_DIR/temp_mosaic.vrt $TEMP_DIR/resampled_mosaic.vrt
+
+        # retrying to see if fixes the issue with trimming
+        gdal_calc.py --calc="(A==-32768)*(-32768) + (A==-32767)*(-32767) + (A>-32767)*(A/100)" \
             --format=GTiff \
             --type=Float32 \
-            -A $TEMP_DIR/temp_mosaic.vrt \
+            -A $TEMP_DIR/resampled_mosaic.vrt \
             --outfile={output.tiff} \
             --NoDataValue=-32768 \
             --co COMPRESS=LZW \
-            --co PREDICTOR=3 \
-            --co TILED=YES \
             --co BIGTIFF=IF_SAFER \
             --config GDAL_CACHEMAX 50%
         

@@ -59,6 +59,7 @@ network_filters:
 composite_network:
   south-east-asia-road: "config/composite_network/south-east-asia-road.csv"
   south-east-asia-rail: "config/composite_network/south-east-asia-rail.csv"
+  somalia-latest: "config/composite_network/somalia-latest.csv"
 
 # OSM tag data to retain on selected features, typically for usage in network annotation/analysis
 # N.B. feature SELECTION is done with the expressions pointed to from network_filters

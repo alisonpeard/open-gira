@@ -73,23 +73,72 @@ rule create_composite_transport_network:
         logging.basicConfig(format="%(asctime)s %(process)d %(filename)s %(message)s", level=logging.INFO)
 
         logging.info("Concatenate nodes and edges")
+
+        # f"{wildcards.OUTPUT_DIR}/{row.infrastructure_dataset}_filter-{row.network_filter}/edges.gpq",
+        def extract_filter_and_dataset(node_path:str):
+            slug = node_path.split("/")[-2]
+            dataset, filt = slug.split("_filter-")
+            return dataset, filt
+
+        def check_edges_in_nodes(edges, nodes):
+            """
+            Check that all edges have a corresponding node.
+            """
+            edge_ids = set(edges["from_id"].unique()).union(set(edges["to_id"].unique()))
+            node_ids = set(nodes["id"].unique())
+            missing_edges = edge_ids - node_ids
+            if missing_edges:
+                raise ValueError(f"{len(missing_edges)=} do not have corresponding nodes.")
+            else:
+                print("All edges have corresponding nodes.")
+
+        def process_id_cols(row, id_col="id"):
+            id_str = row[id_col]
+            filt_str = row["filter"]
+            dataset = row["dataset"]
+            combined = f"{dataset}_{filt_str}"
+            id_str = id_str.replace(dataset, combined)
+            return id_str
+
         nodes = []
         for node_path in input.component_nodes:
-            nodes.append(gpd.read_parquet(node_path))
+            node_tmp = gpd.read_parquet(node_path)
+            dataset, filt = extract_filter_and_dataset(node_path)
+            node_tmp["dataset"] = dataset
+            node_tmp["filter"] = filt
+            node_tmp["id"] = node_tmp.apply(process_id_cols, axis=1)
+            print(f"{dataset=}, {filt=}")
+            nodes.append(node_tmp)
+        
         edges = []
         for edge_path in input.component_edges:
-            edges.append(gpd.read_parquet(edge_path))
+            edge_tmp = gpd.read_parquet(edge_path)
+            dataset, filt = extract_filter_and_dataset(edge_path)
+            edge_tmp["dataset"] = dataset
+            edge_tmp["filter"] = filt
+            edge_tmp["from_id"] = edge_tmp.apply(lambda row: process_id_cols(row, id_col="from_id"), axis=1)
+            edge_tmp["to_id"] = edge_tmp.apply(lambda row: process_id_cols(row, id_col="to_id"), axis=1)
+            # print(f"{dataset=}, {filt=}")
+            edges.append(edge_tmp)
+
+        for edges_tmp, nodes_tmp in zip(edges, nodes):
+            check_edges_in_nodes(edges_tmp, nodes_tmp)
 
         network = snkit.network.Network(
             nodes=pd.concat(nodes).reset_index(drop=True),
             edges=pd.concat(edges).reset_index(drop=True),
         )
 
+        check_edges_in_nodes(network.edges, network.nodes)
+
+        # ! maybe the issue is here
         logging.info("Labelling edge ends with from/to node ids")
         network = snkit.network.add_topology(network)
+        check_edges_in_nodes(network.edges, network.nodes)
 
         logging.info("Labelling edges and nodes with network component ids")
         network = snkit.network.add_component_ids(network)
+        check_edges_in_nodes(network.edges, network.nodes)
 
         logging.info("Writing network to disk")
         network.nodes.to_parquet(output.composite_nodes)

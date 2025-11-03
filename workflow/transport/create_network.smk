@@ -103,21 +103,21 @@ rule create_composite_transport_network:
         nodes = []
         for node_path in input.component_nodes:
             node_tmp = gpd.read_parquet(node_path)
-            dataset, filt = extract_filter_and_dataset(node_path)
-            node_tmp["dataset"] = dataset
-            node_tmp["filter"] = filt
-            node_tmp["id"] = node_tmp.apply(process_id_cols, axis=1)
-            print(f"{dataset=}, {filt=}")
+            # dataset, filt = extract_filter_and_dataset(node_path)
+            # node_tmp["dataset"] = dataset
+            # node_tmp["filter"] = filt
+            # node_tmp["id"] = node_tmp.apply(process_id_cols, axis=1)
+            # print(f"{dataset=}, {filt=}")
             nodes.append(node_tmp)
         
         edges = []
         for edge_path in input.component_edges:
             edge_tmp = gpd.read_parquet(edge_path)
             dataset, filt = extract_filter_and_dataset(edge_path)
-            edge_tmp["dataset"] = dataset
-            edge_tmp["filter"] = filt
-            edge_tmp["from_id"] = edge_tmp.apply(lambda row: process_id_cols(row, id_col="from_id"), axis=1)
-            edge_tmp["to_id"] = edge_tmp.apply(lambda row: process_id_cols(row, id_col="to_id"), axis=1)
+            # edge_tmp["dataset"] = dataset
+            # edge_tmp["filter"] = filt
+            # edge_tmp["from_id"] = edge_tmp.apply(lambda row: process_id_cols(row, id_col="from_id"), axis=1)
+            # edge_tmp["to_id"] = edge_tmp.apply(lambda row: process_id_cols(row, id_col="to_id"), axis=1)
             # print(f"{dataset=}, {filt=}")
             edges.append(edge_tmp)
 

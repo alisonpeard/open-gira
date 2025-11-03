@@ -87,7 +87,6 @@ def run_snakemake_test(rule_name: str, targets: Tuple[str]):
             "-m",
             "snakemake",
             "-c1",  # single core
-            "--reason",  # show snakemake's reasoning, helps with debugging
             "--configfile",  # use test specific configuration
             "tests/config/config.yaml",
             "--allowed-rules",  # only run the specified rule, no precursors
@@ -167,7 +166,9 @@ class OutputChecker:
                 "Unexpected files: {}".format(sorted(map(str, unexpected_files)))
             )
 
-    def compare_files(self, generated_file: Path, expected_file: Path) -> None:
+    def compare_files(  # noqa: C901
+        self, generated_file: Path, expected_file: Path
+    ) -> None:
         """
         Compare two files to check if they are equal by some definition.
 
@@ -239,7 +240,9 @@ class OutputChecker:
         printerr(">>> Files are a match")
 
     @staticmethod
-    def compare_dataframes(generated: pd.DataFrame, expected: pd.DataFrame) -> None:
+    def compare_dataframes(  # noqa: C901
+        generated: pd.DataFrame, expected: pd.DataFrame
+    ) -> None:
         """
         Compare two dataframes, raise ValueError if they aren't the same.
         """
@@ -271,7 +274,6 @@ class OutputChecker:
                     mismatch_cols.add(col)
 
             for col in mismatch_cols:
-
                 # is the column numeric?
                 if np.issubdtype(expected[col].values.dtype, np.number):
                     if np.allclose(generated[col].values, expected[col].values):
@@ -289,8 +291,10 @@ class OutputChecker:
                     MAX_FAILURES_TO_PRINT = 20
                     failures = 0
                     for row in range(len(generated)):
-                        gen_str = str(generated[col][row : row + 1].values)
-                        exp_str = str(expected[col][row : row + 1].values)
+                        gen_str = str(
+                            generated[col][row : row + 1].values  # noqa: E203
+                        )
+                        exp_str = str(expected[col][row : row + 1].values)  # noqa: E203
                         if gen_str != exp_str:
                             failures += 1
                             if failures < MAX_FAILURES_TO_PRINT:

@@ -36,55 +36,6 @@ def format_scenario(scenario):
     elif scenario == "hist":
         return "historical"
 
-rule mosaic_fathom_old:
-    input:
-        indir=lambda wildcards: "/Users/alison/Downloads/fathom/{floodtype}/{epoch}/{scenario}/1in{rp}/".format(
-            floodtype=wildcards.FLOODTYPE,
-            epoch=wildcards.EPOCH,
-            scenario=format_scenario(wildcards.SCENARIO),
-            rp=int(wildcards.RP)
-        )
-    # output:
-    #     tiff="results/input/hazard-fathom-{FLOODTYPE}/raw/{FLOODTYPE}_{SCENARIO}_{EPOCH}_rp{RP}.tif"
-    shell:
-        """
-        TEMP_DIR=$(mktemp -d)
-
-        mkdir -p $(dirname {output.tiff})
-        ls -1 {input.indir}/*.tif > $TEMP_DIR/tiles.txt
-        
-        gdalbuildvrt $TEMP_DIR/temp_mosaic.vrt -input_file_list $TEMP_DIR/tiles.txt
-        
-        # files are big, add compression methods
-        # gdal_calc.py --calc="(A==-32767)*(-999) + (A>-32767)*(A<9999)*(A/100)" \
-        #     --format=GTiff \
-        #     --type=Float32 \
-        #     -A $TEMP_DIR/temp_mosaic.vrt \
-        #     --outfile={output.tiff} \
-        #     --NoDataValue=-32768 \
-        #     --co COMPRESS=LZW \
-        #     --co PREDICTOR=3 \
-        #     --co TILED=YES \
-        #     --co BIGTIFF=IF_SAFER \
-        #     --config GDAL_CACHEMAX 50%
-
-        # Resample to approximately 90m resolution (0.000833 degrees ≈ 3 arc-seconds)
-        gdalwarp -tr 0.000833 0.000833 -r bilinear $TEMP_DIR/temp_mosaic.vrt $TEMP_DIR/resampled_mosaic.vrt
-
-        # retrying to see if fixes the issue with trimming
-        gdal_calc.py --calc="(A==-32768)*(-32768) + (A==-32767)*(-32767) + (A>-32767)*(A/100)" \
-            --format=GTiff \
-            --type=Float32 \
-            -A $TEMP_DIR/resampled_mosaic.vrt \
-            --outfile={output.tiff} \
-            --NoDataValue=-32768 \
-            --co COMPRESS=LZW \
-            --co BIGTIFF=IF_SAFER \
-            --config GDAL_CACHEMAX 50%
-        
-        # rm -rf $TEMP_DIR
-        """
-
 
 rule mosaic_fathom:
     input:
@@ -147,9 +98,9 @@ rule fathom_all_scenario:
     input:
         tiffs = expand(
             "results/input/hazard-fathom-{FLOODTYPE}/raw/{FLOODTYPE}_{SCENARIO}_{EPOCH}_rp{RP}.tif",
-            FLOODTYPE=["pluvial"], # ["fluvial", "coastal"],   # ["pluvial", "fluvial", "coastal"]
-            SCENARIO=["SSP2-4p5", "SSP5-8p5"],   # ["historical", "SSP2_4p5", "SSP5_8p5"]
-            EPOCH=["2050", "2080"],          # ["2020", "2050", "2080"]
+            FLOODTYPE=["pluvial", "fluvial", "coastal"],
+            SCENARIO=["historical", "SSP2-4p5", "SSP5-8p5"],
+            EPOCH=["2020", "2050", "2080"],
             RP=["00005", "00010", "00100", "00200", "00500", "01000"],
         )
 
@@ -157,8 +108,15 @@ rule fathom_all_historical:
     input:
         tiffs = expand(
             "results/input/hazard-fathom-{FLOODTYPE}/raw/{FLOODTYPE}_{SCENARIO}_{EPOCH}_rp{RP}.tif",
-            FLOODTYPE=["pluvial"], # ["fluvial", "coastal"],   # ["pluvial", "fluvial", "coastal"]
-            SCENARIO=["hist"],   # ["historical", "SSP2_4p5", "SSP5_8p5"]
-            EPOCH=["2020"],          # ["2020", "2050", "2080"]
+            FLOODTYPE=["pluvial", "fluvial", "coastal"],
+            SCENARIO=["historical", "SSP2_4p5", "SSP5_8p5"],
+            EPOCH=["2020", "2050", "2080"],
             RP=["00005", "00010", "00100", "00200", "00500", "01000"],
         )
+
+"""
+Run with
+```
+snakemake --rerun-incomplete --cores 6 -- fathom_all_historical fathom_all_scenario
+```
+"""
